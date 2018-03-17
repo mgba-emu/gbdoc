@@ -1,0 +1,418 @@
+Open Game Boy Documentation Project
+===
+
+- [Technical specifications](#tech-specs)
+	- [Models](#models)
+	- [Hardware](#hardware)
+- [CPU](#cpu)
+- [Memory map](#memory-map)
+	- [Memory mapped I/O](#mmio)
+	- [CGB-specific memory mapped I/O](#mmio-cgb)
+- [Cartridges](#cart)
+	- [Memory bank controllers](#mbc)
+		- [MBC1](#mbc-1)
+		- [MBC2](#mbc-2)
+		- [MBC3](#mbc-3)
+		- [MBC5](#mbc-5)
+		- [MBC6](#mbc-6)
+		- [MBC7](#mbc-7)
+		- [MMM01](#mbc-mmm01)
+		- [Pocket Camera](#mbc-pocketcam)
+		- [TAMA5](#mbc-tama5)
+		- [HuC-1](#mbc-huc1)
+		- [HuC-3](#mbc-huc3)
+		- [Bootleg/pirate mappers](#mbc-pirate)
+- [Picture processing unit](#ppu)
+	- [Draw mode](#ppu-mode)
+		- [Mode 0](#ppu-mode-0)
+		- [Mode 1](#ppu-mode-1)
+		- [Mode 2](#ppu-mode-2)
+		- [Mode 3](#ppu-mode-3)
+	- [Palettes](#ppu-pal)
+	- [Background](#ppu-bg)
+	- [OAM/OBJs (sprites)](#ppu-obj)
+	- [Window](#ppu-win)
+	- [Scrolling](#ppu-sc)
+- [Audio processing unit](#apu)
+	- [Channel 1](#apu-ch1)
+	- [Channel 2](#apu-ch2)
+	- [Channel 3](#apu-ch3)
+	- [Channel 4](#apu-ch4)
+- [Timer](#timer)
+- [Interrupts](#irq)
+- [Serial I/O](#sio)
+	- [Link cable](#sio-link)
+	- [Game Boy Printer](#sio-gbprinter)
+	- [Infrared](#sio-ir)
+- [Miscellaneous](#misc)
+	- [Super Game Boy](#sgb)
+- [About this documentation](#about)
+
+<a id="tech-specs">Technical specifications</a>
+===
+
+<a id="models">Models</a>
+---
+
+There are three lines of Game Boy models based on CPU iterations, each with its own minor revisions:
+
+- DMG: Game Boy
+	- DMG-01
+		- Original Game Boy, Dot Matrix Game, "brick"
+	- SHVC-027
+		- Super Game Boy
+		- SNES accessory with DMG CPU
+		- Slight clock difference from DMG
+- MGB: Game Boy Pocket
+	- MGB-001
+		- Game Boy Pocket
+		- Minor hardware revision
+	- MGB-101
+		- Game Boy Light
+		- Japan only
+	- SHVC-042
+		- Super Game Boy 2
+		- SNES accessory with MGB CPU
+		- Same clock as MGB
+- CGB: Game Boy Color
+	- CGB-001
+		- Game Boy Color
+		- Major hardware revision
+	- AGB-001/AGS-001/AGS-101
+		- Game Boy Advance
+		- CGB compatibility mode
+
+<a id="hardware">Hardware</a>
+---
+
+- [CPU](#cpu): Sharp LR35902 clocked at 4.194304 MHz
+	- Similar instruction set to Intel 8080 and Zilog Z80, sometimes erroneously referred to as a Z80
+	- CGB version is optionally clocked at 8.388608 MHz (2x DMG CPU)
+- RAM: 8 kiB (DMG), 32 kiB (CGB)
+- Video: 160x144 pixels
+	- [PPU](#ppu):
+		- 2 backgrounds: BG and WIN
+		- 40 OBJs (sprites), max 10 per line
+		- 8×8 pixel tiles
+		- 4 "modes" (0–3), with variable timing
+		- 456 cycles per line
+		- 70224 cycles per frame
+		- VDraw: 144 lines, 65664 cycles
+		- VBlank: 10 lines, 4560 cycles
+	- DMG:
+		- 2-bit/4 distinct colors
+		- 4 colors per palette
+		- 1 background palette
+		- 2 object palettes (index 0 is transparent, 3 effective colors per palette)
+	- CGB:
+		- 15-bit/32768 distinct colors
+		- 4 colors per palette
+		- 8 background palettes
+		- 8 object palettes (index 0 is transparent, 3 effective colors per palette)
+-  Audio: 4 channels
+	- [Channel 1](#apu-ch1): Square, sweep
+
+<a id="cpu">CPU</a>
+===
+
+The Game Boy is based on a Sharp LR35902, which is similar to Intel 8080 and Zilog Z80.
+
+- DMG: clocked at 4.194304 MHz
+- CGB: optionally clocked at 8.388608 MHz
+- Two types of cycles: T states and M cycles
+	- M cycles ("machine" cycles, 1:4 clock) are the base unit of CPU instructions
+	- T states or T cycles ("transistor"(?) states, 1:1 clock) are the base unit of system operation and many components are clocked directly on T state
+- 8-bit general purpose registers
+	- A, B, C, D, E, H, L
+- 8-bit flags register (F)
+	- Bits 0–3 are grounded to 0
+	- Bit 4: C (carry flag)
+	- Bit 5: H (half-carry flag)
+	- Bit 6: N (negative flag)
+	- Bit 7: Z (zero flag)
+- 16-bit general purpose register views
+	- AF, BC, DE, HL
+	- AF does not allow writing F bits 0–3
+- 16-bit special purpose registers
+	- PC (program counter)
+	- SP (stack pointer)
+
+TODO
+
+<a id="memory-map">Memory map</a>
+===
+
+- `$0000` – `$7FFF`: [External bus (ROM region)](#mbc)
+- `$8000` – `$9FFF`: VRAM
+- `$A000` – `$BFFF`: External bus (RAM region)
+- `$C000` – `$DFFF`: WRAM
+- `$E000` – `$FDFF`: ECHO (WRAM secondary mapping)
+- `$FE00` – `$FE9F`: Object Attribute Memory (OAM)
+- `$FEA0` – `$FEFF`: Unmapped (floats high, reads `$FF`)
+- `$FF00` – `$FF7F`: [Memory mapped I/O](#mmio)
+- `$FF80` – `$FFFE`: High RAM (HRAM)
+- `$FFFF`: [`IE` register](#mmio-if)
+
+<a id="mmio">Memory mapped I/O</a>
+---
+
+- `$FF00` — `P1`/`JOYP`: [Joypad](#mmio-p1)
+- `$FF01` — `SB`: [Serial byte](#mmio-sb)
+- `$FF02` — `SC`: [Serial control](#mmio-sc)
+- `$FF03`: unmapped
+- `$FF04` — `DIV`: [Clock divider](#mmio-div)
+- `$FF05` — `TIMA`: [Timer value](#mmio-tima)
+- `$FF06` — `TMA`: [Timer reload](#mmio-tma)
+- `$FF07` — `TAC`: [Timer control](#mmio-tac)
+- `$FF08` – `$FF0E`: unmapped
+- `$FF0F` — `IF`: [Interrupts asserted](#irq-if)
+- TODO ...
+- `$FFFF` — `IE`: [Interrupts enabled](#irq-ie)
+
+See [CGB-specific memory mapped I/O](#mmio-cgb) for additional registers in CGB mode.
+
+This section describes the bit mappings of memory mapped I/O.
+
+Mapping Key:
+
+- `1`: Unmapped (hi-Z), always reads 1
+- `I`: Input only (readable by CPU)
+- `O`: Output only (writable by CPU)
+- `B`: Bidirectional (read/write by CPU)
+
+### <a id="mmio-p1">`$FF00` — `P1`/`JOYP`: Joypad</a>
+- Mapping: `11BBIIII`
+
+TODO
+
+### <a id="mmio-sb">`$FF01` — `SB`: Serial byte</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-sc">`$FF02` — `SC`: Serial control</a>
+- DMG Mapping: `B111111B`
+- CGB Mapping: `B11111BB`
+
+TODO
+
+### <a id="mmio-div">`$FF04` — `DIV`: Clock divider</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-tima">`$FF05` — `TIMA`: Timer value</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-tma">`$FF06` — `TMA`: Timer reload</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-tma">`$FF07` — `TAC`: Timer control</a>
+- Mapping: `11111BBB`
+
+TODO
+
+### <a id="mmio-if">`$FF0F` — `IF`: Interrupts asserted</a>
+- Mapping: `111BBBBB`
+
+Bits:
+
+- 0: VBlank
+- 1: LCD STAT
+- 2: Timer
+- 3: Serial
+- 4: Joypad
+
+TODO
+
+### <a id="mmio-ie">`$FFFF` — `IE`: Interrupts enabled</a>
+- Mapping: `111BBBBB`
+
+Bits:
+
+- 0: VBlank
+- 1: LCD STAT
+- 2: Timer
+- 3: Serial
+- 4: Joypad
+
+TODO
+
+## <a id="mmio-cgb">CGB-specific memory mapped I/O</a>
+
+TODO
+
+<a id="cart">Cartridges</a>
+===
+
+TODO
+
+<a id="mbc">Memory bank controllers</a>
+---
+
+Mapper IDs:
+
+- No MBC
+	- `$00`
+	- `$08`: RAM
+	- `$09`: Battery-backed RAM
+- [MBC1](#mbc-1):
+	- `$01`
+	- `$02`: RAM
+	- `$03`: Battery-backed RAM
+- [MBC2](#mbc-2):
+	- `$05`: RAM
+	- `$06`: Battery-backed RAM
+- [MBC3](#mbc-3):
+	- `$0F`: Battery-backed RTC
+	- `$10`: Battery-backed RAM and RTC
+	- `$11`
+	- `$12`: RAM
+	- `$13`: Battery-backed RAM
+- MBC4 does not exist
+- [MBC5](#mbc-5):
+	- `$19`
+	- `$1A`: RAM
+	- `$1B`: Battery-backed RAM
+	- `$1C`: Rumble
+	- `$1D`: Battery-backed rumble
+	- `$1E`: Battery-backed RAM and rumble
+- [MBC6](#mbc-6):
+	- `$20`: Battery backed RAM, flash memory
+- [MBC7](#mbc-7):
+	- `$22`: EEPROM, accelerometer
+- [MMM01](#mbc-mmm01)
+	- `$0B`
+	- `$0C`: RAM
+	- `$0D`: Battery-backed RAM
+- [Pocket Camera](#mbc-pocketcam)
+	- `$FC`
+- [TAMA5](#mbc-tama5)
+	- `$FD`: EEPROM, RTC, and alarm
+- [HuC-1](#mbc-huc1)
+	- `$FF`: IR sensor
+- [HuC-3](#mbc-huc3)
+	- `$FE`: IR sensor
+- [Bootleg/pirate mappers](#mbc-pirate)
+	- (?): Sachen
+	- (?): Sintax
+	- TODO ...
+
+### <a id="mbc-7">MBC7</a>
+
+MBC7 is a special memory bank controller for the Game Boy Color that contains an 2-axis accelerometer (ADXL202E) and and a 256 byte EEPROM ([93LC56](http://www.microchip.com/wwwproducts/en/en010904)). It is notably used in the game Kirby's Tilt 'n' Tumble.
+
+Accelerometer data must be latched before reading. Data is 16-bit and centered at the value `$81D0`. Earth's gravity affects the value by roughly `$70`, with larger acceleration providing a larger range. Maximum range is unknown.
+
+Save data is accessed through a manually clocked shift register.
+
+TODO
+
+<a id="ppu">Picture processing unit</a>
+===
+
+The Game Boy's picture processing unit is responsible for creating video frames. One frame takes 70224 cycles (~59.7275 frames per second).
+
+Timing is divided into 154 lines, 144 during VDraw and 10 during VBlank.
+
+<a name="ppu-mode">Draw modes</a>
+---
+The PPU has 4 distinct modes:
+
+- Mode 0: HBlank
+- Mode 1: VBlank
+- Mode 2: OAM scan
+- Mode 3: HDraw
+
+Modes 0, 2, and 3 do not occur during VBlank, only during VDraw. Mode transitions occur in this order:
+
+- 1 → 2 (VBlank to VDraw transition)
+- 2 → 3 (VDraw only)
+- 3 → 0 (VDraw only)
+- 0 → 1 (VDraw to VBlank transition)
+- 0 → 2 (VDraw only)
+
+**Different transitions can affect timing characteristics.**
+
+### <a name="ppu-mode-0">Mode 0</a>
+
+HBlank occurs between lines and allows a short period of time for adjusting PPU parameters, and OAM. During this time VRAM is locked(?).
+
+#### Timing characteristics
+Base timing: 204 cycles (max)
+
+HDraw (mode 3) can steal cycles from HBlank depending on scrolling parameters (SCX), window parameters (WX), and OAM.
+
+### <a name="ppu-mode-1">Mode 1</a>
+
+VBlank occurs between frames and allows a short period of time for adjusting PPU parameters, VRAM, and OAM.
+
+#### Timing characteristics
+Exact timing: 4560 cycles (10 lines)
+
+### <a name="ppu-mode-2">Mode 2</a>
+
+Mode 2 occurs after HBlank and before HDraw. It is used to scan OAM to find which OBJs are active. During this time VRAM and OAM are locked.
+
+#### Timing characteristics
+Exact(?) timing: 80 cycles (2 cycles per OAM entry)
+
+### <a name="ppu-mode-3">Mode 3</a>
+
+HDraw is when pixels are drawn.
+
+#### Timing characteristics
+Base timing: 172 cycles (min)
+
+- 1 cycle per BG pixel
+- 6 cycles per active OBJ
+- 0–7 extra cycles: SCX % 8
+- TODO: describe PPU FIFO
+- TODO: describe windows
+
+
+<a id="oam-bug">OAM bug</a>
+---
+
+TODO
+
+<a id="apu">Audio processing unit</a>
+===
+
+TODO
+
+<a id="timer">Timer</a>
+===
+
+TODO
+
+<a id="irq">Interrupts</a>
+===
+
+TODO
+
+<a id="sio">Serial I/O</a>
+===
+
+TODO
+
+<a id="misc">Miscellaneous</a>
+===
+
+<a id="sgb">Super Game Boy</a>
+---
+
+TODO
+
+<a id="about">About this document</a>
+===
+
+![CC-BY-4.0](https://i.creativecommons.org/l/by/4.0/88x31.png)
+
+This document is licensed under the [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/) (CC-BY 4.0)
+
+- Copyright © 2018, Vicki Pfau
