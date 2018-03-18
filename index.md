@@ -349,7 +349,7 @@ Modes 0, 2, and 3 do not occur during VBlank, only during VDraw. Mode transition
 
 ### <a name="ppu-mode-0">Mode 0</a>
 
-HBlank occurs between lines and allows a short period of time for adjusting PPU parameters, and OAM. During this time VRAM is locked(?).
+HBlank occurs between lines and allows a short period of time for adjusting PPU parameters, VRAM, and OAM.
 
 #### Timing characteristics
 Base timing: 204 cycles (max)
@@ -378,7 +378,7 @@ HDraw is when pixels are drawn.
 Base timing: 172 cycles (min)
 
 - 1 cycle per BG pixel
-- 6 cycles per active OBJ
+- 6–11 cycles per active OBJ
 - 0–7 extra cycles: `SCX % 8`
 - TODO: describe PPU FIFO
 - TODO: describe windows
