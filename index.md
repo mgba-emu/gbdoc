@@ -39,6 +39,7 @@ Open Game Boy Documentation Project
 	- [Channel 3](#apu-ch3)
 	- [Channel 4](#apu-ch4)
 - [Timer](#timer)
+- [DMA](#dma)
 - [Interrupts](#irq)
 - [Serial I/O](#sio)
 	- [Link cable](#sio-link)
@@ -46,6 +47,7 @@ Open Game Boy Documentation Project
 	- [Infrared](#sio-ir)
 - [Miscellaneous](#misc)
 	- [Super Game Boy](#sgb)
+	- [Cheat codes](#cheats)
 - [About this documentation](#about)
 
 <a id="tech-specs">Technical specifications</a>
@@ -89,33 +91,35 @@ There are three lines of Game Boy models based on CPU iterations, each with its 
 	- Similar instruction set to Intel 8080 and Zilog Z80, sometimes erroneously referred to as a Z80
 	- CGB version is optionally clocked at 8.388608 MHz (2x DMG CPU)
 - RAM: 8 kiB (DMG), 32 kiB (CGB)
-- Video: 160x144 pixels
-	- [PPU](#ppu):
-		- 2 backgrounds: BG and WIN
-		- 40 OBJs (sprites), max 10 per line
-		- 8×8 pixel tiles
-		- 4 "modes" (0–3), with variable timing
-		- 456 cycles per line
-		- 70224 cycles per frame
-		- VDraw: 144 lines, 65664 cycles
-		- VBlank: 10 lines, 4560 cycles
-	- DMG:
+- [Video](#ppu): 160×144 pixels
+	- 2 backgrounds: main and window
+	- 40 OBJs (sprites), max 10 per line
+	- 8×8 pixel tiles
+	- 4 "modes" (0–3), with variable timing
+	- 456 cycles per line
+	- 70224 cycles per frame
+	- VDraw: 144 lines, 65664 cycles
+	- VBlank: 10 lines, 4560 cycles
+	- DMG mode:
 		- 2-bit/4 distinct colors
 		- 4 colors per palette
 		- 1 background palette
 		- 2 object palettes (index 0 is transparent, 3 effective colors per palette)
-	- CGB:
+	- CGB mode:
 		- 15-bit/32768 distinct colors
 		- 4 colors per palette
 		- 8 background palettes
 		- 8 object palettes (index 0 is transparent, 3 effective colors per palette)
 -  Audio: 4 channels
 	- [Channel 1](#apu-ch1): Square, sweep
+	- [Channel 2](#apu-ch2): Square
+	- [Channel 3](#apu-ch3): "Wave" (4-bit PCM patterns)
+	- [Channel 4](#apu-ch4): Noise (LFSR)
 
 <a id="cpu">CPU</a>
 ===
 
-The Game Boy is based on a Sharp LR35902, which is similar to Intel 8080 and Zilog Z80.
+The Game Boy uses a Sharp LR35902, which is similar to Intel 8080, Zilog Z80, and other i8080 knockoffs.
 
 - DMG: clocked at 4.194304 MHz
 - CGB: optionally clocked at 8.388608 MHz
@@ -165,9 +169,11 @@ TODO
 - `$FF06` — `TMA`: [Timer reload](#mmio-tma)
 - `$FF07` — `TAC`: [Timer control](#mmio-tac)
 - `$FF08` – `$FF0E`: unmapped
-- `$FF0F` — `IF`: [Interrupts asserted](#irq-if)
-- TODO ...
-- `$FFFF` — `IE`: [Interrupts enabled](#irq-ie)
+- `$FF0F` — `IF`: [Interrupts asserted](#mmio-if)
+- TODO audio ...
+- `$FF30` – `$FF3F`: [Wave pattern](#apu-ch3)
+- TODO video ...
+- `$FFFF` — `IE`: [Interrupts enabled](#mmio-ie)
 
 See [CGB-specific memory mapped I/O](#mmio-cgb) for additional registers in CGB mode.
 
@@ -317,7 +323,9 @@ TODO
 
 The Game Boy's picture processing unit is responsible for creating video frames. One frame takes 70224 cycles (~59.7275 frames per second).
 
-Timing is divided into 154 lines, 144 during VDraw and 10 during VBlank.
+Timing is divided into 154 lines, 144 during VDraw and 10 during VBlank. Each line takes 456 cycles.
+
+The PPU can be disabled entirely during normal operation via the [`LCDC` register](#mmio-lcdc). This prevents normal timing such that re-enabling it can lead to irregular frame rates, at least transiently.
 
 <a name="ppu-mode">Draw modes</a>
 ---
@@ -370,7 +378,7 @@ Base timing: 172 cycles (min)
 
 - 1 cycle per BG pixel
 - 6 cycles per active OBJ
-- 0–7 extra cycles: SCX % 8
+- 0–7 extra cycles: `SCX % 8`
 - TODO: describe PPU FIFO
 - TODO: describe windows
 
@@ -390,10 +398,44 @@ TODO
 
 TODO
 
-<a id="irq">Interrupts</a>
+<a id="dma">DMA</a>
 ===
 
 TODO
+
+<a id="irq">Interrupts</a>
+===
+
+The Game Boy contains 5 interrupt types. Each type has a different priority and vector:
+
+| Type      | Priority | Vector  |
+| --------- | -------- | ------- |
+| VBlank    | 0        | `$0040` |
+| LCD STAT  | 1        | `$0048` |
+| Timer     | 2        | `$0050` |
+| Serial    | 3        | `$0058` |
+| Joypad    | 4        | `$0060` |
+
+Interrupts are controlled through three registers:
+
+- [`IF`](#mmio-if): interrupts asserted
+- [`IE`](#mmio-ie): interrupts enabled
+- `IME`: interrupt master enable
+
+`IF` and `IE` are memory-mapped, whereas `IME` is controlled through the [`DI`](#cpu-di) (disable interrupts) and [`EI`](#cpu-ei) (enable interrupts) instructions.
+
+Interrupt requests are edge triggered(_Is this true in all cases?_): when an IRQ is asserted, it sets the bit corresponding to its priority in the [`IF` register](#mmio-if). Interrupt *dispatch* however is level triggered: if at any time between instructions(_Unclear; which T state?_) while `IME` is enabled `IE AND IF != 0` IRQ dispatch will begin. Note that multi-M cycle instructions effectively block interrupt dispatch from starting until the end of the instruction.
+
+Interrupt dispatch takes 4 M cycles. The interrupt vector is loaded into the program counter based on the lowest significant bit of `IE AND IF` after the program counter's old value has been pushed onto the stack, which takes two M cycles (one per byte, high byte first).
+
+When interrupt dispatch completes the bit associated with the interrupt handled is automatically cleared from `IF` and `IME` is set to 0. Returning from the interrupt is handled by the `reti` instruction, which atomically pops the old program counter from the stack and reenables `IME`.
+
+### Interrupt dispatch canceling
+
+Interrupt dispatch is not atomic. If the value of `IE AND IF` changes between the first M cycle and when the vector is loaded, the value of the vector may change. This can happen if `IE` or `IF` is altered in some way, either by a higher priority IRQ asserting, or by another memory write (e.g. the first stack push overwriting `IE` or `IF`).
+
+- If a higher priority IRQ is asserted, it effectively "steals" the interrupt dispatch
+- If `IE AND IF` becomes zero, no interrupt vector can be located and instead `$0000` is loaded into the program counter.
 
 <a id="sio">Serial I/O</a>
 ===
@@ -404,6 +446,11 @@ TODO
 ===
 
 <a id="sgb">Super Game Boy</a>
+---
+
+TODO
+
+<a id="cheats">Cheat codes</a>
 ---
 
 TODO
