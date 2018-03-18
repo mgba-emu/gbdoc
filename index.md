@@ -46,6 +46,7 @@ Open Game Boy Documentation Project
 	- [Game Boy Printer](#sio-gbprinter)
 	- [Infrared](#sio-ir)
 - [Miscellaneous](#misc)
+	- [Hardware issues](#errata)
 	- [Super Game Boy](#sgb)
 	- [Cheat codes](#cheats)
 - [About this documentation](#about)
@@ -430,7 +431,7 @@ Interrupt dispatch takes 4 M cycles. The interrupt vector is loaded into the pro
 
 When interrupt dispatch completes the bit associated with the interrupt handled is automatically cleared from `IF` and `IME` is set to 0. Returning from the interrupt is handled by the `reti` instruction, which atomically pops the old program counter from the stack and reenables `IME`.
 
-### Interrupt dispatch canceling
+### <a id="irq-cancel">Interrupt dispatch canceling</a>
 
 Interrupt dispatch is not atomic. If the value of `IE AND IF` changes between the first M cycle and when the vector is loaded, the value of the vector may change. This can happen if `IE` or `IF` is altered in some way, either by a higher priority IRQ asserting, or by another memory write (e.g. the first stack push overwriting `IE` or `IF`).
 
@@ -444,6 +445,13 @@ TODO
 
 <a id="misc">Miscellaneous</a>
 ===
+
+<a id="errata">Hardware issues</a>
+---
+
+- [OAM bug](#oam-bug)
+- [Interrupt dispatch canceling](#irq-cancel)
+- [STAT IRQ blocking](#ppu-stat-bug)
 
 <a id="sgb">Super Game Boy</a>
 ---
