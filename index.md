@@ -153,7 +153,7 @@ TODO
 - `$C000` – `$DFFF`: WRAM
 - `$E000` – `$FDFF`: ECHO (WRAM secondary mapping)
 - `$FE00` – `$FE9F`: Object Attribute Memory (OAM)
-- `$FEA0` – `$FEFF`: Unmapped (floats high, reads `$FF`)
+- `$FEA0` – `$FEFF`: Unmapped (pulled high, reads `$FF`)
 - `$FF00` – `$FF7F`: [Memory mapped I/O](#mmio)
 - `$FF80` – `$FFFE`: High RAM (HRAM)
 - `$FFFF`: [`IE` register](#mmio-if)
@@ -261,7 +261,23 @@ TODO
 <a id="mbc">Memory bank controllers</a>
 ---
 
-Mapper IDs:
+The Game Boy Advance has a 16-bit address space, the lower half of which (`$0000` – `$7FFF`), is devoted to cartridge ROM.
+Further there is an a 8 kiB region (`$A000` – `$BFFF`), which is generally used for external RAM (often backed by a battery).
+However, this leaves 32 kiB usable for ROM which is insufficient for most games.
+This is where memory bank controllers (MBC for short, sometimes called mappers) come into play: using an MBC the allocated address space can be sliced up and swapped out.
+
+The ROM address space is usually broken into two sections, `$0000` – `$3FFF` being a (usually) fixed mapping to the beginning of a ROM, or "bank 0", and `$4000` – `$7FFF` which can be programmatically swapped to point to other regions of ROM.
+How this is handled depends on the specific MBC implementation.
+
+Many MBCs share similar traits, namely:
+
+- Writing a value to an address in the region `$0000` – `$1FFF` controls if external RAM is accessible. `$xA` enables access and other values disable access.
+- Writing a value to an address in the region `$2000` – `$3FFF` controls which bank is swapped into the upper half of ROM address space.
+- Writing a value to an address in the region `$4000` – `$5FFF` controls which bank is swapped into the external RAM address space.
+
+None of these are universal, however. Please see the sections on the respective MBC for details.
+
+A list of known MBC types is as follows:
 
 - No MBC
 	- `$00`
@@ -308,6 +324,55 @@ Mapper IDs:
 	- (?): Sachen
 	- (?): Sintax
 	- TODO ...
+
+### <a id="mbc-1">MBC1</a>
+
+- Maximum ROM size: 128 banks (2 MiB) (?)
+- Maximum RAM size: (?)
+
+MBC1 is a common memory bank controller for the first few years of Game Boy games. It can be wired up to the cartridge differently sometimes giving it the illusion of being a different MBC type, usually referred to as MBC1-M. However, the physical chip is the same.
+
+#### Bank swapping
+
+MBC1 bank swapping is a bit unusual due to the fact that it has a high bank and a low bank that combine to make the actual bank number. The high and low bank are combined as such to arrive at the bank number for the `$4000` region bank:
+
+`LO % MAPPING_SIZE + (HI % 4) * MAPPING_SIZE`
+
+The bank for the `$0000` can be swapped when the MBC is "external RAM mode", which is controlled by writes to the `$6000` region. When in RAM mode, bank "0" is mapped as `(HI % 4) * MAPPING_SIZE`.
+
+The mapping size is 16 for regular MBC1 cartridges and 32 for MBC1-M cartridges.
+
+#### Read from `$0000` – `$3FFF`
+
+Default mapped as bank 0. Can be swapped out with specific other banks based on "mode". See the Mapping section.
+
+#### Read from `$4000` – `$7FFF`
+
+Default mapped as bank 1. Can be swapped out with most other banks. See the Mapping section.
+
+#### Read from `$A000` – `$BFFF`
+
+External RAM. Access is disabled by default. Disabled reads are pulled high (`$FF`).
+
+#### Write to `$0xxx` – `$1xxx`
+
+Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored (?).
+
+#### Write to `$2xxx` – `$3xxx`
+
+Set the low bank value; see the Mapping section. It cannot be zero and will be coerced to 1 if a value of 0 is written.
+
+#### Write to `$4xxx` – `$5xxx`
+
+Set the high bank value; see the Mapping section. This also controls the external RAM bank when in RAM mode.
+
+#### Write to `$6xxx` – `$7xxx`
+
+Adjust mode based on the least significant bit. Writing `%…1` enables "external RAM mode" which allows swapping the RAM bank and the bank at `$0000`. Writing `%…0` disables RAM mode and switches the RAM and `$0000` ROM banks back to 0.
+
+#### Write to `$A000` – `$BFFF`
+
+Writes a value to external RAM, if enabled. The value is ignored otherwise.
 
 ### <a id="mbc-7">MBC7</a>
 
