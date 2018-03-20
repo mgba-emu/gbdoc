@@ -340,7 +340,7 @@ MBC1 bank swapping is a bit unusual due to the fact that it has a high bank and 
 
 The bank for the `$0000` can be swapped when the MBC is "external RAM mode", which is controlled by writes to the `$6000` region. When in RAM mode, bank "0" is mapped as `(HI % 4) * MAPPING_SIZE`.
 
-The mapping size is 16 for regular MBC1 cartridges and 32 for MBC1-M cartridges.
+The mapping size is 32 for regular MBC1 cartridges and 16 for MBC1-M cartridges.
 
 #### Read from `$0000` – `$3FFF`
 
