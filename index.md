@@ -96,7 +96,7 @@ There are three lines of Game Boy models based on CPU iterations, each with its 
 	- 2 backgrounds: main and window
 	- 40 OBJs (sprites), max 10 per line
 	- 8×8 pixel tiles
-	- 4 "modes" (0–3), with variable timing
+	- 4 "modes" (0—3), with variable timing
 	- 456 cycles per line
 	- 70224 cycles per frame
 	- VDraw: 144 lines, 65664 cycles
@@ -130,14 +130,14 @@ The Game Boy uses a Sharp LR35902, which is similar to Intel 8080, Zilog Z80, an
 - 8-bit general purpose registers
 	- A, B, C, D, E, H, L
 - 8-bit flags register (F)
-	- Bits 0–3 are grounded to 0
+	- Bits 0—3 are grounded to 0
 	- Bit 4: C (carry flag)
 	- Bit 5: H (half-carry flag)
 	- Bit 6: N (negative flag)
 	- Bit 7: Z (zero flag)
 - 16-bit general purpose register views
 	- AF, BC, DE, HL
-	- AF does not allow writing F bits 0–3
+	- AF does not allow writing F bits 0—3
 - 16-bit special purpose registers
 	- PC (program counter)
 	- SP (stack pointer)
@@ -147,15 +147,15 @@ TODO
 <a id="memory-map">Memory map</a>
 ===
 
-- `$0000` – `$7FFF`: [External bus (ROM region)](#mbc)
-- `$8000` – `$9FFF`: VRAM
-- `$A000` – `$BFFF`: External bus (RAM region)
-- `$C000` – `$DFFF`: WRAM
-- `$E000` – `$FDFF`: ECHO (WRAM secondary mapping)
-- `$FE00` – `$FE9F`: Object Attribute Memory (OAM)
-- `$FEA0` – `$FEFF`: Unmapped (pulled high, reads `$FF`)
-- `$FF00` – `$FF7F`: [Memory mapped I/O](#mmio)
-- `$FF80` – `$FFFE`: High RAM (HRAM)
+- `$0000` — `$7FFF`: [External bus (ROM region)](#mbc)
+- `$8000` — `$9FFF`: VRAM
+- `$A000` — `$BFFF`: External bus (RAM region)
+- `$C000` — `$DFFF`: WRAM
+- `$E000` — `$FDFF`: ECHO (WRAM secondary mapping)
+- `$FE00` — `$FE9F`: Object Attribute Memory (OAM)
+- `$FEA0` — `$FEFF`: Unmapped (pulled high, reads `$FF`)
+- `$FF00` — `$FF7F`: [Memory mapped I/O](#mmio)
+- `$FF80` — `$FFFE`: High RAM (HRAM)
 - `$FFFF`: [`IE` register](#mmio-if)
 
 <a id="mmio">Memory mapped I/O</a>
@@ -169,10 +169,10 @@ TODO
 - `$FF05` — `TIMA`: [Timer value](#mmio-tima)
 - `$FF06` — `TMA`: [Timer reload](#mmio-tma)
 - `$FF07` — `TAC`: [Timer control](#mmio-tac)
-- `$FF08` – `$FF0E`: unmapped
+- `$FF08` — `$FF0E`: unmapped
 - `$FF0F` — `IF`: [Interrupts asserted](#mmio-if)
 - TODO audio ...
-- `$FF30` – `$FF3F`: [Wave pattern](#apu-ch3)
+- `$FF30` — `$FF3F`: [Wave pattern](#apu-ch3)
 - TODO video ...
 - `$FFFF` — `IE`: [Interrupts enabled](#mmio-ie)
 
@@ -261,19 +261,19 @@ TODO
 <a id="mbc">Memory bank controllers</a>
 ---
 
-The Game Boy Advance has a 16-bit address space, the lower half of which (`$0000` – `$7FFF`), is devoted to cartridge ROM.
-Further there is an a 8 kiB region (`$A000` – `$BFFF`), which is generally used for external RAM (often backed by a battery).
+The Game Boy Advance has a 16-bit address space, the lower half of which (`$0000` — `$7FFF`), is devoted to cartridge ROM.
+Further there is an a 8 kiB region (`$A000` — `$BFFF`), which is generally used for external RAM (often backed by a battery).
 However, this leaves 32 kiB usable for ROM which is insufficient for most games.
 This is where memory bank controllers (MBC for short, sometimes called mappers) come into play: using an MBC the allocated address space can be sliced up and swapped out.
 
-The ROM address space is usually broken into two sections, `$0000` – `$3FFF` being a (usually) fixed mapping to the beginning of a ROM, or "bank 0", and `$4000` – `$7FFF` which can be programmatically swapped to point to other regions of ROM.
+The ROM address space is usually broken into two sections, `$0000` — `$3FFF` being a (usually) fixed mapping to the beginning of a ROM, or "bank 0", and `$4000` — `$7FFF` which can be programmatically swapped to point to other regions of ROM.
 How this is handled depends on the specific MBC implementation.
 
 Many MBCs share similar traits, namely:
 
-- Writing a value to an address in the region `$0000` – `$1FFF` controls if external RAM is accessible. `$xA` enables access and other values disable access.
-- Writing a value to an address in the region `$2000` – `$3FFF` controls which bank is swapped into the upper half of ROM address space.
-- Writing a value to an address in the region `$4000` – `$5FFF` controls which bank is swapped into the external RAM address space.
+- Writing a value to an address in the region `$0000` — `$1FFF` controls if external RAM is accessible. `$xA` enables access and other values disable access.
+- Writing a value to an address in the region `$2000` — `$3FFF` controls which bank is swapped into the upper half of ROM address space.
+- Writing a value to an address in the region `$4000` — `$5FFF` controls which bank is swapped into the external RAM address space.
 
 None of these are universal, however. Please see the sections on the respective MBC for details.
 
@@ -342,35 +342,35 @@ The bank for the `$0000` can be swapped when the MBC is "external RAM mode", whi
 
 The mapping size is 32 for regular MBC1 cartridges and 16 for MBC1-M cartridges.
 
-#### Read from `$0000` – `$3FFF`
+#### Read from `$0000` — `$3FFF`
 
 Default mapped as bank 0. Can be swapped out with specific other banks based on "mode". See the Mapping section.
 
-#### Read from `$4000` – `$7FFF`
+#### Read from `$4000` — `$7FFF`
 
 Default mapped as bank 1. Can be swapped out with most other banks. See the Mapping section.
 
-#### Read from `$A000` – `$BFFF`
+#### Read from `$A000` — `$BFFF`
 
 External RAM. Access is disabled by default. Disabled reads are pulled high (`$FF`).
 
-#### Write to `$0xxx` – `$1xxx`
+#### Write to `$0xxx` — `$1xxx`
 
 Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored (?).
 
-#### Write to `$2xxx` – `$3xxx`
+#### Write to `$2xxx` — `$3xxx`
 
 Set the low bank value; see the Mapping section. It cannot be zero and will be coerced to 1 if a value of 0 is written.
 
-#### Write to `$4xxx` – `$5xxx`
+#### Write to `$4xxx` — `$5xxx`
 
 Set the high bank value; see the Mapping section. This also controls the external RAM bank when in RAM mode.
 
-#### Write to `$6xxx` – `$7xxx`
+#### Write to `$6xxx` — `$7xxx`
 
 Adjust mode based on the least significant bit. Writing `%…1` enables "external RAM mode" which allows swapping the RAM bank and the bank at `$0000`. Writing `%…0` disables RAM mode and switches the RAM and `$0000` ROM banks back to 0.
 
-#### Write to `$A000` – `$BFFF`
+#### Write to `$A000` — `$BFFF`
 
 Writes a value to external RAM, if enabled. The value is ignored otherwise.
 
@@ -443,8 +443,8 @@ HDraw is when pixels are drawn.
 Base timing: 172 cycles (min)
 
 - 1 cycle per BG pixel
-- 6–11 cycles per active OBJ
-- 0–7 extra cycles: `SCX % 8`
+- 6—11 cycles per active OBJ
+- 0—7 extra cycles: `SCX % 8`
 - TODO: describe PPU FIFO
 - TODO: describe windows
 
