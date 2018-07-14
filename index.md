@@ -568,12 +568,6 @@ Base timing: 172 cycles (min)
 - TODO: describe PPU FIFO
 - TODO: describe windows
 
-
-<a id="oam-bug">OAM bug</a>
----
-
-TODO
-
 <a id="apu">Audio processing unit</a>
 ===
 
@@ -638,6 +632,19 @@ TODO
 - [Interrupt dispatch canceling](#irq-cancel)
 - [STAT IRQ blocking](#ppu-stat-bug)
 - [STAT writing IRQ](#stat-write-irq)
+
+### <a id="oam-bug">OAM bug</a>
+
+Under some circumstances, OAM may be corrupted.
+
+Triggers are:
+- Performing a 16-bit `inc` or `dec` (this includes the implicit `inc hl` performed by `ld [hli], a`, and the implicit `dec sp`s performed by `push de`, for example) with the affected register pointing to OAM (TODO: is this Mode-dependent? Does `ld hl, $FE00 ; dec hl` corrupt? Does `ld hl, $FEFF ; inc hl` corrupt?)
+- Writing OAM while the PPU is reading it (TODO: does this include Mode 2, Mode 3, or both?)
+TODO: are there other triggers?
+
+TODO: explain how exactly OAM is corrupted.
+
+The OAM bug is fixed on CGB.
 
 ### <a id="ppu-stat-bug">STAT IRQ blocking</a>
 
