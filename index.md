@@ -173,7 +173,18 @@ TODO
 - `$FF0F` — `IF`: [Interrupts asserted](#mmio-if)
 - TODO audio ...
 - `$FF30` – `$FF3F`: [Wave pattern](#apu-ch3)
-- TODO video ...
+- `$FF40` — `LCDC`: [LCD control](#mmio-lcdc)
+- `$FF41` — `STAT`: [LCD status](#mmio-stat)
+- `$FF42` — `SCY`: [Background vert. scroll](#mmio-scy)
+- `$FF43` — `SCX`: [Background horiz. scroll](#mmio-scx)
+- `$FF44` — `LY`: [LCD Y coordinate](#mmio-ly)
+- `$FF45` — `LYC`: [LCD Y compare](#mmio-lyc)
+- `$FF46` — `DMA`: [OAM DMA source address](#mmio-dma)
+- `$FF47` — `BGP`: [Background palette](#mmio-bgp)
+- `$FF48` — `OBP0`: [OBJ palette 0](#mmio-obp0)
+- `$FF49` — `OBP1`: [OBJ palette 1](#mmio-obp1)
+- `$FF4A` — `WY`: [Window Y coord](#mmio-wy)
+- `$FF4B` — `WX`: [Window X coord](#mmio-wx)
 - `$FFFF` — `IE`: [Interrupts enabled](#mmio-ie)
 
 See [CGB-specific memory mapped I/O](#mmio-cgb) for additional registers in CGB mode.
@@ -206,22 +217,32 @@ TODO
 ### <a id="mmio-div">`$FF04` — `DIV`: Clock divider</a>
 - Mapping: `BBBBBBBB`
 
-TODO
+This register is incremented by the CPU clock. (TODO: explain at what rate)
+
+Writing to this register sets it to 0.
 
 ### <a id="mmio-tima">`$FF05` — `TIMA`: Timer value</a>
 - Mapping: `BBBBBBBB`
 
-TODO
+Increases at a rate specified by [`TAC`](#mmio-tac). When it overflows, a Timer IRQ is asserted, and this register is reloaded with [`TMA`](#mmio-tma)'s value.
+
+The way the increment is performed in hardware causes spurious increments under certain conditions, refer to [Timer](#timer).
 
 ### <a id="mmio-tma">`$FF06` — `TMA`: Timer reload</a>
 - Mapping: `BBBBBBBB`
 
-TODO
+When [TIMA](#mmio-tima) overflows, this register's contents are copied to it. Controls timer overflow frequency.
 
 ### <a id="mmio-tma">`$FF07` — `TAC`: Timer control</a>
 - Mapping: `11111BBB`
 
-TODO
+Bits:
+- 0–1: Select at which frequency [`TIMA`](#mmio-tima) increases
+  - 0: CPU clock / 1024
+  - 1: CPU clock / 16
+  - 2: CPU clock / 64
+  - 3: CPU clock / 256
+- 2: [`TIMA`](#mmio-tima) doesn't increment when this bit is reset
 
 ### <a id="mmio-if">`$FF0F` — `IF`: Interrupts asserted</a>
 - Mapping: `111BBBBB`
@@ -235,6 +256,105 @@ Bits:
 - 4: Joypad
 
 TODO
+
+### <a id="mmio-lcdc">`$FF40` — `LCDC`: LCD control</a>
+- Mapping: `BBBBBBBB`
+
+Bits:
+- 0: Background enable (on CGB: Background & window enable)
+- 1: OBJ enable
+- 2: OBJ size
+- 3: Background tilemap
+- 4: Background tiles
+- 5: Window enable
+- 6: Window tilemap
+- 7: LCD enable
+
+### <a id="mmio-stat">`$FF41` — `STAT`: LCD status</a>
+- Mapping: `1BBBIII`
+
+Bits:
+- 0–1: LCD mode (see [Draw modes](#draw-modes))
+- 2: [`LY`](#mmio-ly) coincidence flag
+- 3–6: STAT interrupt selection
+  - 3: Mode 0 (HBlank)
+  - 4: Mode 1 (VBlank)
+  - 5: Mode 2 (OAM scan)
+  - 6: LY coincidence
+
+Bits 4–6 select which sources are considered for the STAT interrupt. Selecting more than one source may trigger [STAT IRQ blocking](#ppu-stat-bug).
+
+Note that on DMG, writing to this register may assert a STAT IRQ; refer to [STAT writing IRQ](#stat-write-irq).
+
+### <a id="mmio-scy">`$FF42` — `SCY`: Background vert. scroll</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-scx">`$FF43` — `SCX`: Background horiz. scroll</a>
+- Mapping: `BBBBBBBB`
+
+TODO
+
+### <a id="mmio-ly">`$FF44` — `LY`: LCD Y coordinate</a>
+- Mapping: `IIIIIIII`
+
+Indicates which line the LCD is currently processing. Values 0-143 indicate VDraw, values 144-153 indicate VBlank.
+
+Note that the LCD is in VBlank for part of line 0; see (TODO).
+
+### <a id="mmio-lyc">`$FF45` — `LYC`: LCD Y compare</a>
+- Mapping: `BBBBBBBB`
+
+As long as [`LY`](#mmio-ly) has the same value as this register, [`STAT`](#mmio-stat) bit 2 is set.
+
+### <a id="mmio-dma">`$FF46` — `DMA`: OAM DMA source address</a>
+- Mapping: `BBBBBBBB`
+
+When this register is written to, an OAM DMA transfer starts immediately.
+
+If value $XY is written, the transfer will copy $XY00-$XY9F to $FE00-$FE9F.
+
+### <a id="mmio-bgp">`$FF47` — `BGP`: Background palette</a>
+- Mapping: `BBBBBBBB`
+
+Defines how colors of BG (and the window) are displayed.
+
+Bits 0 and 1 define color 0, bits 2 and 3 define color 1, etc. The two bits form a value, where 0 is white, 1 is light gray, 2 is dark gray, and 3 is black.
+
+### <a id="mmio-obp0">`$FF48` — `OBP0`: OBJ palette 0</a>
+- Mapping: `BBBBBBBB`
+
+Defines how colors of OBJ using palette 0 are displayed.
+
+The mapping is identical to [`BGP`](#mmio-bgp), however color 0 is never displayed (transparent), so the lower 2 bits are never considered.
+
+### <a id="mmio-obp1">`$FF49` — `OBP1`: OBJ palette 1</a>
+- Mapping: `BBBBBBBB`
+
+Defines how colors of OBJ using palette 1 are displayed.
+
+The mapping is identical to [`OBP0`](#mmio-obp0).
+
+### <a id="mmio-wy">`$FF4A` — `WY`: Window Y coord</a>
+- Mapping: `BBBBBBBB`
+
+Defines the window's Y coordinate, that is, the first scanline on which the window is displayed.
+
+TODO: what happens when changing mid-frame? Mid-scanline?
+
+### <a id="mmio-wx">`$FF4B` — `WX`: Window X coord</a>
+- Mapping: `BBBBBBBB`
+
+Defines the window's X coordinate **plus 7**. (Therefore, a value of 7 will cause the window to span the entire scanline, and a value of 87 will only span half of the screen). Values larger than 167 cause the window to not be displayed.
+
+Values 1-6 act as if the window started to the left of the screen. Value 0 has rather erratic behavior that depends on [`SCX`](#mmio-scx) (TODO: explain how)
+
+TODO: what happens when changing mid-frame? Mid-scanline?
+
+TODO: explain what happens when hiding the window every other scanline, for example
+
+TODO: the official manual states that a `WX` value of $A6 (166) is "prohibited". Why?
 
 ### <a id="mmio-ie">`$FFFF` — `IE`: Interrupts enabled</a>
 - Mapping: `111BBBBB`
