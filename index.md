@@ -550,7 +550,7 @@ Exact timing: 4560 cycles (10 lines)
 
 ### <a name="ppu-mode-2">Mode 2</a>
 
-Mode 2 occurs after HBlank and before HDraw. It is used to scan OAM to find which OBJs are active. During this time VRAM and OAM are locked.
+Mode 2 occurs after HBlank and before HDraw. It is used to scan OAM to find which OBJs are active. During this time OAM is locked.
 
 #### Timing characteristics
 Exact timing: 80 cycles (2 cycles per OAM entry)
