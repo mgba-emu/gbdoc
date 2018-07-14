@@ -637,6 +637,19 @@ TODO
 - [OAM bug](#oam-bug)
 - [Interrupt dispatch canceling](#irq-cancel)
 - [STAT IRQ blocking](#ppu-stat-bug)
+- [STAT writing IRQ](#stat-write-irq)
+
+### <a id="ppu-stat-bug">STAT IRQ blocking</a>
+
+The STAT IRQ is edge-triggered, based on conditions selected in the [`STAT` register](#mmio-stat). A STAT IRQ is asserted when one or more selected conditions become true when none were true previously. Trouble arises between mode transitions, because the signal doesn't go low then high again, but stays low.
+
+For example, enabling Mode 2 and Mode 0 sources will assert an IRQ on LY 0 Mode 2, then on LY 0 Mode 0, but not on LY 1 Mode 2 since both modes are contiguous.
+
+NB: this does not occur with Mode 0 and LYC, because LYC is slightly late on Mode 2, so the signal does go low then high again. ([Source](https://twitter.com/liji32/status/1002867726476562432))
+
+### <a id="stat-write-irq">STAT writing IRQ</a>
+
+When writing to STAT on DMG, bits 3–6 are considered high for one cycle, which temporarily selects all conditions and may thus assert a STAT IRQ. CGB does not exhibit this bug, even in DMG mode.
 
 <a id="sgb">Super Game Boy</a>
 ---
