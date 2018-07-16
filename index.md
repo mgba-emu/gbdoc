@@ -458,7 +458,7 @@ MBC1 bank swapping is a bit unusual due to the fact that it has a high bank and 
 
 `LO % MAPPING_SIZE + (HI % 4) * MAPPING_SIZE`
 
-The bank for the `$0000` can be swapped when the MBC is "external RAM mode", which is controlled by writes to the `$6000` region. When in RAM mode, bank "0" is mapped as `(HI % 4) * MAPPING_SIZE`.
+The bank for the `$0000` region can be swapped when the MBC is "external RAM mode" and wired as MBC1-M, which is controlled by writes to the `$6000` region. When in RAM mode, bank "0" is mapped as `(HI % 4) * MAPPING_SIZE`.
 
 The mapping size is 32 for regular MBC1 cartridges and 16 for MBC1-M cartridges.
 
@@ -484,7 +484,7 @@ Set the low bank value; see the Mapping section. It cannot be zero and will be c
 
 #### Write to `$4xxx` – `$5xxx`
 
-Set the high bank value; see the Mapping section. This also controls the external RAM bank when in RAM mode.
+Set the high bank value; see the Mapping section. This instead controls the external RAM bank when in RAM mode.
 
 #### Write to `$6xxx` – `$7xxx`
 
@@ -492,7 +492,95 @@ Adjust mode based on the least significant bit. Writing `%…1` enables "externa
 
 #### Write to `$A000` – `$BFFF`
 
-Writes a value to external RAM, if enabled. The value is ignored otherwise.
+Write a value to external RAM, if enabled. The value is ignored otherwise.
+
+### <a id="mbc-3">MBC3</a>
+
+- Maximum ROM size: 256 banks (4 MiB) (?)
+- Maximum RAM size: 4 banks (32 kB) / 8 banks (64 kB) for MBC30
+
+MBC3 is the most common MBC with MBC5. It's especially present in the DMG era. MBC3 improves upon MBC1 by removing the "banking mode", and can function with a RTC (Real-Time Clock, famously used in the second generation Pok&eacute;mon games). The Japanese version of Pokémon Crystal contains a special MBC3 labelled MBC30, that simply can address twice the external RAM. (This is the only known difference; JP Crystal is also the only known cart to use MBC30)
+
+#### Read from `$0000` – `$3FFF`
+
+Always mapped as bank 0.
+
+#### Read from `$4000` – `$7FFF`
+
+Default mapped as bank 1. Can be swapped out with all other banks except bank 0. See the Mapping section.
+
+#### Read from `$A000` – `$BFFF`
+
+External RAM or RTC register. Access is disabled by default. Disabled reads are pulled high (`$FF`).
+
+#### Write to `$0xxx` – `$1xxx`
+
+Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored.
+
+#### Write to `$2xxx` – `$3xxx`
+
+Set the ROM bank value; see the Mapping section.
+
+#### Write to `$4xxx` – `$5xxx`
+
+Set the RAM bank value, or select a RTC register; see the Mapping section.
+
+#### Write to `$6xxx` – `$7xxx`
+
+Latch RTC registers when writing $00 then $01. Latching the registers should be done before accessing them, but does not stop the clock.
+
+#### Write to `$A000` – `$BFFF`
+
+Write a value to external RAM or a RTC register, if enabled. The value is otherwise ignored.
+
+### <a id="mbc-5">MBC5</a>
+
+- Maximum ROM size: 512 banks (8 MiB) (?)
+- Maximum RAM size: 16 banks (128 kB)
+
+MBC5 is the most common MBC with MBC3. It's especially present in the CGB era, mostly because it is the first MBC to officially support CGB double-speed mode, at least according to Nintendo's manual. MBC5 improves upon MBC3 by expanding ROM and RAM capabilities (although only one game makes use of all 512 ROM banks, and a handful of all 16 RAM banks), as well as the aforementioned CGB double-speed support. MBC5 cannot work with a RTC, unlike MBC3, but can work with a rumble motor.
+
+TODO: how is the rumble controlled?
+
+#### Bank swapping
+
+MBC5 can address up to 512 banks, which doesn't fit the ROM bank value into a single byte. Therefore, that value is split into a low byte, and a high byte, which effectively contains only 1 bit (? If MBC5 can *actually* support more ROM banks, this may even be a full byte). Since most, or rather all but one, games use at most 256 banks, rendering this extra bit (? byte) unused. (TODO: for games not using this extra byte, what does writing to `$3xxx` do?)
+
+#### Read from `$0000` – `$3FFF`
+
+Always mapped as bank 0.
+
+#### Read from `$4000` – `$7FFF`
+
+Default mapped as bank 1. Can be swapped out with all other banks **including** bank 0. See the Mapping section.
+
+#### Read from `$A000` – `$BFFF`
+
+External RAM register. Access is disabled by default. Disabled reads are pulled high (`$FF`).
+
+#### Write to `$0xxx` – `$1xxx`
+
+Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored (?).
+
+#### Write to `$2xxx`
+
+Set the low ROM bank value; see the Mapping section.
+
+#### Write to `$3xxx`
+
+Set the high ROM bank value; see the Mapping section.
+
+#### Write to `$4xxx` – `$5xxx`
+
+Set the RAM bank value; see the Mapping section.
+
+#### Write to `$6xxx` – `$7xxx`
+
+TODO: does this control rumble?
+
+#### Write to `$A000` – `$BFFF`
+
+Write a value to external RAM, if enabled. The value is otherwise ignored.
 
 ### <a id="mbc-7">MBC7</a>
 
