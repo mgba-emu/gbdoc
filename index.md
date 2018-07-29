@@ -173,18 +173,18 @@ TODO
 - `$FF0F` — `IF`: [Interrupts asserted](#mmio-if)
 - TODO audio ...
 - `$FF30` – `$FF3F`: [Wave pattern](#apu-ch3)
-- `$FF40` — `LCDC`: [LCD control](#mmio-lcdc)
-- `$FF41` — `STAT`: [LCD status](#mmio-stat)
-- `$FF42` — `SCY`: [Background vert. scroll](#mmio-scy)
-- `$FF43` — `SCX`: [Background horiz. scroll](#mmio-scx)
-- `$FF44` — `LY`: [LCD Y coordinate](#mmio-ly)
-- `$FF45` — `LYC`: [LCD Y compare](#mmio-lyc)
-- `$FF46` — `DMA`: [OAM DMA source address](#mmio-dma)
-- `$FF47` — `BGP`: [Background palette](#mmio-bgp)
-- `$FF48` — `OBP0`: [OBJ palette 0](#mmio-obp0)
-- `$FF49` — `OBP1`: [OBJ palette 1](#mmio-obp1)
-- `$FF4A` — `WY`: [Window Y coord](#mmio-wy)
-- `$FF4B` — `WX`: [Window X coord](#mmio-wx)
+- `$FF40` — `LCDC`: [LCD control](#ppu-lcdc)
+- `$FF41` — `STAT`: [LCD status](#ppu-stat)
+- `$FF42` — `SCY`: [Background vert. scroll](#ppu-scy)
+- `$FF43` — `SCX`: [Background horiz. scroll](#ppu-scx)
+- `$FF44` — `LY`: [LCD Y coordinate](#ppu-ly)
+- `$FF45` — `LYC`: [LCD Y compare](#ppu-lyc)
+- `$FF46` — `DMA`: [OAM DMA source address](#ppu-dma)
+- `$FF47` — `BGP`: [Background palette](#ppu-bgp)
+- `$FF48` — `OBP0`: [OBJ palette 0](#ppu-obp0)
+- `$FF49` — `OBP1`: [OBJ palette 1](#ppu-obp1)
+- `$FF4A` — `WY`: [Window Y coord](#ppu-wy)
+- `$FF4B` — `WX`: [Window X coord](#ppu-wx)
 - `$FFFF` — `IE`: [Interrupts enabled](#mmio-ie)
 
 See [CGB-specific memory mapped I/O](#mmio-cgb) for additional registers in CGB mode.
@@ -257,7 +257,7 @@ Bits:
 
 TODO
 
-### <a id="mmio-lcdc">`$FF40` — `LCDC`: LCD control</a>
+### <a id="ppu-lcdc">`$FF40` — `LCDC`: LCD control</a>
 - Mapping: `BBBBBBBB`
 
 Bits:
@@ -270,12 +270,12 @@ Bits:
 - 6: Window tilemap
 - 7: LCD enable
 
-### <a id="mmio-stat">`$FF41` — `STAT`: LCD status</a>
+### <a id="ppu-stat">`$FF41` — `STAT`: LCD status</a>
 - Mapping: `1BBBIII`
 
 Bits:
 - 0–1: LCD mode (see [Draw modes](#draw-modes))
-- 2: [`LY`](#mmio-ly) coincidence flag
+- 2: [`LY`](#ppu-ly) coincidence flag
 - 3–6: STAT interrupt selection
   - 3: Mode 0 (HBlank)
   - 4: Mode 1 (VBlank)
@@ -286,69 +286,69 @@ Bits 4–6 select which sources are considered for the STAT interrupt. Selecting
 
 Note that on DMG, writing to this register may assert a STAT IRQ; refer to [STAT writing IRQ](#stat-write-irq).
 
-### <a id="mmio-scy">`$FF42` — `SCY`: Background vert. scroll</a>
+### <a id="ppu-scy">`$FF42` — `SCY`: Background vert. scroll</a>
 - Mapping: `BBBBBBBB`
 
 TODO
 
-### <a id="mmio-scx">`$FF43` — `SCX`: Background horiz. scroll</a>
+### <a id="ppu-scx">`$FF43` — `SCX`: Background horiz. scroll</a>
 - Mapping: `BBBBBBBB`
 
 TODO
 
-### <a id="mmio-ly">`$FF44` — `LY`: LCD Y coordinate</a>
+### <a id="ppu-ly">`$FF44` — `LY`: LCD Y coordinate</a>
 - Mapping: `IIIIIIII`
 
 Indicates which line the LCD is currently processing. Values 0-143 indicate VDraw, values 144-153 indicate VBlank.
 
 Note that the LCD is in VBlank for part of line 0; see (TODO).
 
-### <a id="mmio-lyc">`$FF45` — `LYC`: LCD Y compare</a>
+### <a id="ppu-lyc">`$FF45` — `LYC`: LCD Y compare</a>
 - Mapping: `BBBBBBBB`
 
-As long as [`LY`](#mmio-ly) has the same value as this register, [`STAT`](#mmio-stat) bit 2 is set.
+As long as [`LY`](#ppu-ly) has the same value as this register, [`STAT`](#ppu-stat) bit 2 is set.
 
-### <a id="mmio-dma">`$FF46` — `DMA`: OAM DMA source address</a>
+### <a id="ppu-dma">`$FF46` — `DMA`: OAM DMA source address</a>
 - Mapping: `BBBBBBBB`
 
 When this register is written to, an OAM DMA transfer starts immediately.
 
 If value $XY is written, the transfer will copy $XY00-$XY9F to $FE00-$FE9F.
 
-### <a id="mmio-bgp">`$FF47` — `BGP`: Background palette</a>
+### <a id="ppu-bgp">`$FF47` — `BGP`: Background palette</a>
 - Mapping: `BBBBBBBB`
 
 Defines how colors of BG (and the window) are displayed.
 
 Bits 0 and 1 define color 0, bits 2 and 3 define color 1, etc. The two bits form a value, where 0 is white, 1 is light gray, 2 is dark gray, and 3 is black.
 
-### <a id="mmio-obp0">`$FF48` — `OBP0`: OBJ palette 0</a>
+### <a id="ppu-obp0">`$FF48` — `OBP0`: OBJ palette 0</a>
 - Mapping: `BBBBBBBB`
 
 Defines how colors of OBJ using palette 0 are displayed.
 
-The mapping is identical to [`BGP`](#mmio-bgp), however color 0 is never displayed (transparent), so the lower 2 bits are never considered.
+The mapping is identical to [`BGP`](#ppu-bgp), however color 0 is never displayed (transparent), so the lower 2 bits are never considered.
 
-### <a id="mmio-obp1">`$FF49` — `OBP1`: OBJ palette 1</a>
+### <a id="ppu-obp1">`$FF49` — `OBP1`: OBJ palette 1</a>
 - Mapping: `BBBBBBBB`
 
 Defines how colors of OBJ using palette 1 are displayed.
 
-The mapping is identical to [`OBP0`](#mmio-obp0).
+The mapping is identical to [`OBP0`](#ppu-obp0).
 
-### <a id="mmio-wy">`$FF4A` — `WY`: Window Y coord</a>
+### <a id="ppu-wy">`$FF4A` — `WY`: Window Y coord</a>
 - Mapping: `BBBBBBBB`
 
 Defines the window's Y coordinate, that is, the first scanline on which the window is displayed.
 
 TODO: what happens when changing mid-frame? Mid-scanline?
 
-### <a id="mmio-wx">`$FF4B` — `WX`: Window X coord</a>
+### <a id="ppu-wx">`$FF4B` — `WX`: Window X coord</a>
 - Mapping: `BBBBBBBB`
 
 Defines the window's X coordinate **plus 7**. (Therefore, a value of 7 will cause the window to span the entire scanline, and a value of 87 will only span half of the screen). Values larger than 167 cause the window to not be displayed.
 
-Values 1-6 act as if the window started to the left of the screen. Value 0 has rather erratic behavior that depends on [`SCX`](#mmio-scx) (TODO: explain how)
+Values 1-6 act as if the window started to the left of the screen. Value 0 has rather erratic behavior that depends on [`SCX`](#ppu-scx) (TODO: explain how)
 
 TODO: what happens when changing mid-frame? Mid-scanline?
 
@@ -631,7 +631,7 @@ The Game Boy's picture processing unit is responsible for creating video frames.
 
 Timing is divided into 154 lines, 144 during VDraw and 10 during VBlank. Each line takes 456 cycles.
 
-The PPU can be disabled entirely during normal operation via the [`LCDC` register](#mmio-lcdc). This prevents normal timing such that re-enabling it can lead to irregular frame rates, at least transiently.
+The PPU can be disabled entirely during normal operation via the [`LCDC` register](#ppu-lcdc). This prevents normal timing such that re-enabling it can lead to irregular frame rates, at least transiently.
 
 <a name="ppu-mode">Draw modes</a>
 ---
@@ -768,7 +768,7 @@ The OAM bug is fixed on CGB.
 
 ### <a id="ppu-stat-bug">STAT IRQ blocking</a>
 
-The STAT IRQ is edge-triggered, based on conditions selected in the [`STAT` register](#mmio-stat). A STAT IRQ is asserted when one or more selected conditions become true when none were true previously. Trouble arises between mode transitions, because the signal doesn't go low then high again, but stays low.
+The STAT IRQ is edge-triggered, based on conditions selected in the [`STAT` register](#ppu-stat). A STAT IRQ is asserted when one or more selected conditions become true when none were true previously. Trouble arises between mode transitions, because the signal doesn't go low then high again, but stays low.
 
 For example, enabling Mode 2 and Mode 0 sources will assert an IRQ on LY 0 Mode 2, then on LY 0 Mode 0, but not on LY 1 Mode 2 since both modes are contiguous.
 
