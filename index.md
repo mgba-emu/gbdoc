@@ -476,7 +476,7 @@ External RAM. Access is disabled by default. Disabled reads are pulled high (`$F
 
 #### Write to `$0xxx` – `$1xxx`
 
-Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored (?).
+Enable or disable external RAM access. Writing a value of `$xA` enables access, whereas any other value disables access. The high nybble is ignored.
 
 #### Write to `$2xxx` – `$3xxx`
 
@@ -494,12 +494,16 @@ Adjust mode based on the least significant bit. Writing `%…1` enables "externa
 
 Write a value to external RAM, if enabled. The value is ignored otherwise.
 
+### <a id="mbc-2">MBC2</a>
+
+TODO
+
 ### <a id="mbc-3">MBC3</a>
 
 - Maximum ROM size: 256 banks (4 MiB) (?)
 - Maximum RAM size: 4 banks (32 kB) / 8 banks (64 kB) for MBC30
 
-MBC3 is the most common MBC with MBC5. It's especially present in the DMG era. MBC3 improves upon MBC1 by removing the "banking mode", and can function with a RTC (Real-Time Clock, famously used in the second generation Pok&eacute;mon games). The Japanese version of Pokémon Crystal contains a special MBC3 labelled MBC30, that simply can address twice the external RAM. (This is the only known difference; JP Crystal is also the only known cart to use MBC30)
+MBC3 is one of the most common MBCs, along with MBC5. It's especially present in the DMG era. MBC3 improves upon MBC1 by removing the "banking mode", and can function with a RTC (Real-Time Clock, famously used in the second generation Pokémon games). The Japanese version of Pokémon Crystal contains a special MBC3 labelled MBC30, that simply can address twice the external RAM. (This is the only known difference; JP Crystal is also the only known cart to use MBC30)
 
 #### Read from `$0000` – `$3FFF`
 
@@ -538,9 +542,7 @@ Write a value to external RAM or a RTC register, if enabled. The value is otherw
 - Maximum ROM size: 512 banks (8 MiB) (?)
 - Maximum RAM size: 16 banks (128 kB)
 
-MBC5 is the most common MBC with MBC3. It's especially present in the CGB era, mostly because it is the first MBC to officially support CGB double-speed mode, at least according to Nintendo's manual. MBC5 improves upon MBC3 by expanding ROM and RAM capabilities (although only one game makes use of all 512 ROM banks, and a handful of all 16 RAM banks), as well as the aforementioned CGB double-speed support. MBC5 cannot work with a RTC, unlike MBC3, but can work with a rumble motor.
-
-TODO: how is the rumble controlled?
+MBC5 is ome of the most common MBCs, along with MBC3. It's especially present in the CGB era, mostly because it is the first MBC to officially support CGB double-speed mode, at least according to Nintendo's manual. MBC5 improves upon MBC3 by expanding ROM and RAM capabilities (although only one game makes use of all 512 ROM banks, and a handful of all 16 RAM banks), as well as the aforementioned CGB double-speed support. MBC5 cannot work with a RTC, unlike MBC3, but can work with a rumble motor.
 
 #### Bank swapping
 
@@ -572,15 +574,17 @@ Set the high ROM bank value; see the Mapping section.
 
 #### Write to `$4xxx` – `$5xxx`
 
-Set the RAM bank value; see the Mapping section.
-
-#### Write to `$6xxx` – `$7xxx`
-
-TODO: does this control rumble?
+Set the RAM bank value; see the Mapping section. If the cartridge has rumble, bit 3 is mapped to rumble instead of RAM bank, i.e. `bank OR 8` enables rumble.
 
 #### Write to `$A000` – `$BFFF`
 
 Write a value to external RAM, if enabled. The value is otherwise ignored.
+
+### <a id="mbc-6">MBC6</a>
+
+MBC6 is special in that it has a 8 Mbit flash chip that can be mapped into ROM space, as well as having two separate ROM banked regions (`$4xxx` –`$5xxx` and `$6xxx` – `$7xxx`) and two SRAM banked regions (`$Axxx` and `$Bxxx`). It is only used in one game, Net de Get: Minigame @ 100.
+
+TODO
 
 ### <a id="mbc-7">MBC7</a>
 
@@ -589,6 +593,34 @@ MBC7 is a special memory bank controller for the Game Boy Color that contains an
 Accelerometer data must be latched before reading. Data is 16-bit and centered at the value `$81D0`. Earth's gravity affects the value by roughly `$70`, with larger acceleration providing a larger range. Maximum range is unknown.
 
 Save data is accessed through a manually clocked shift register.
+
+TODO
+
+### <a id="mbc-mmm01">MMM01</a>
+
+MMM01 is a "metamapper" in that it is used in game collection (Momotarō Collection 2 and Taito Variety Pack) to provide a boot menu before locking itself down into a separate "normal" mapper mode that only exposes certain banks to the game inside the collection.
+
+TODO
+
+### <a id="mbc-pocketcam">Pocket Cam</a>
+
+TODO
+
+### <a id="mbc-tama5">TAMA5</a>
+
+TAMA5 is a custom MBC developed by Bandai and officially licensed by Nintendo that provides a small EEPROM, along with RTC and piezoelectric buzzer components, similar to HuC-3. It is an unusal MBC in that it only has two addresses with which it can communicate with the MBC. There are other TAMA chips on the PCB, which include TAMA6 and TAMA7 (the ROM). It is only used in one game, Game de Hakken!! Tamagotchi - Osutchi to Mesutchi, also known as Tamagotchi 3.
+
+TODO
+
+### <a id="mbc-huc1">HuC-1</a>
+
+HuC-1 is a custom MBC developed by Hudson and officially licensed by Nintendo that provides infrared communication for games that predate the Game Boy Color, such as Pokémon Card GB, the Japanese version of Pokémon Trading Card Game. Oddly, the international versions do not use HuC-1 and instead rely on the GBC's IR port.
+
+TODO
+
+### <a id="mbc-huc3">HuC-3</a>
+
+HuC-3 is a custom MBC developed by Hudson and officially licensed by Nintendo that extends HuC-1 with an RTC and a piezoelectric buzzer. It's notably used in the Robot Poncots (Robopon outside of Japan) and Pocket Family game series.
 
 TODO
 
