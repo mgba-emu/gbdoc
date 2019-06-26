@@ -210,7 +210,7 @@ This register is used for reading joypad input. The hardware multiplexes the D-p
 | 2   | Up    | Select |
 | 3   | Down  | Start  |
 
-Additionally, bits 4 and 5 are used for communicating with the SGB. See [#sgb] for more information.
+Additionally, bits 4 and 5 are used for communicating with the SGB. See the [Super Game Boy section](#sgb) for more information.
 
 ### <a id="mmio-sb">`$FF01` — `SB`: Serial byte</a>
 - Mapping: `BBBBBBBB`
