@@ -88,8 +88,8 @@ There are three lines of Game Boy models based on CPU iterations, each with its 
 <a id="hardware">Hardware</a>
 ---
 
-- [CPU](#cpu): Sharp LR35902 clocked at 4.194304 MHz
-	- Similar instruction set to Intel 8080 and Zilog Z80, sometimes erroneously referred to as a Z80
+- [CPU](#cpu): Sharp SM83 clocked at 4.194304 MHz
+	- Similar instruction set to Intel 8080 and Zilog Z80, sometimes erroneously referred to as a Z80 or LR35902
 	- CGB version is optionally clocked at 8.388608 MHz (2x DMG CPU)
 - RAM: 8 kiB (DMG), 32 kiB (CGB)
 - [Video](#ppu): 160×144 pixels
@@ -120,7 +120,7 @@ There are three lines of Game Boy models based on CPU iterations, each with its 
 <a id="cpu">CPU</a>
 ===
 
-The Game Boy uses a Sharp LR35902, which is similar to Intel 8080, Zilog Z80, and other i8080 knockoffs.
+The Game Boy uses a Sharp SM83, which is similar to Intel 8080, Zilog Z80, and other i8080 knockoffs.
 
 - DMG: clocked at 4.194304 MHz
 - CGB: optionally clocked at 8.388608 MHz
