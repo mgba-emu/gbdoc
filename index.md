@@ -153,7 +153,7 @@ TODO
 - `$C000` – `$DFFF`: WRAM
 - `$E000` – `$FDFF`: ECHO (WRAM secondary mapping)
 - `$FE00` – `$FE9F`: Object Attribute Memory (OAM)
-- `$FEA0` – `$FEFF`: Unmapped (pulled high, reads `$FF`)
+- `$FEA0` – `$FEFF`: Invalid OAM region (behavior varies per revision)
 - `$FF00` – `$FF7F`: [Memory mapped I/O](#mmio)
 - `$FF80` – `$FFFE`: High RAM (HRAM)
 - `$FFFF`: [`IE` register](#mmio-if)
@@ -201,7 +201,16 @@ Mapping Key:
 ### <a id="mmio-p1">`$FF00` — `P1`/`JOYP`: Joypad</a>
 - Mapping: `11BBIIII`
 
-TODO
+This register is used for reading joypad input. The hardware multiplexes the D-pad and the face buttons so only four buttons can be read at a time, based on the value of bits 4 and 5 (0 for select, 1 for deselect). Keys are pulled low (to 0) when pressed and high (to 1) when unpressed. If bits 4 and 5 are both low, then the combination of the D-pad and face buttons is ANDed (i.e. a 0 value implies one or both of the associated keys are pressed). If neither bit 4 or 5 is selected then all keys read 1.
+
+| Bit | 4 low | 5 low  |
+| --- | ----- | ------ |
+| 0   | Right | A      |
+| 1   | Left  | B      |
+| 2   | Up    | Select |
+| 3   | Down  | Start  |
+
+Additionally, bits 4 and 5 are used for communicating with the SGB. See [#sgb] for more information.
 
 ### <a id="mmio-sb">`$FF01` — `SB`: Serial byte</a>
 - Mapping: `BBBBBBBB`
@@ -795,4 +804,4 @@ TODO
 
 This document is licensed under the [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/) (CC-BY 4.0)
 
-- Copyright © 2018, Vicki Pfau
+- Copyright © 2018 – 2019, Vicki Pfau
