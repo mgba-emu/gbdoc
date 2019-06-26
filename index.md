@@ -171,7 +171,30 @@ TODO
 - `$FF07` — `TAC`: [Timer control](#mmio-tac)
 - `$FF08` – `$FF0E`: unmapped
 - `$FF0F` — `IF`: [Interrupts asserted](#mmio-if)
-- TODO audio ...
+- `$FF10` — `NR10`: [Audio channel 1 sweep](#apu-nr10)
+- `$FF11` — `NR11`: [Audio channel 1 sound length/wave duty](#apu-nr11)
+- `$FF12` — `NR12`: [Audio channel 1 envelope](#apu-nr12)
+- `$FF13` — `NR13`: [Audio channel 1 frequency](#apu-nr13)
+- `$FF14` — `NR14`: [Audio channel 1 control](#apu-nr14)
+- `$FF15` — `NR20`: Unmapped
+- `$FF16` — `NR21`: [Audio channel 2 sound length/wave duty](#apu-nr21)
+- `$FF17` — `NR22`: [Audio channel 2 envelope](#apu-nr22)
+- `$FF18` — `NR23`: [Audio channel 2 frequency](#apu-nr23)
+- `$FF19` — `NR24`: [Audio channel 2 control](#apu-nr24)
+- `$FF1A` — `NR30`: [Audio channel 3 enable](#apu-nr30)
+- `$FF1B` — `NR31`: [Audio channel 3 sound length](#apu-nr31)
+- `$FF1C` — `NR32`: [Audio channel 3 volume](#apu-nr32)
+- `$FF1D` — `NR33`: [Audio channel 3 frequency](#apu-nr33)
+- `$FF1E` — `NR34`: [Audio channel 3 control](#apu-nr34)
+- `$FF1F` — `NR40`: Unmapped
+- `$FF20` — `NR41`: [Audio channel 4 sound length](#apu-nr41)
+- `$FF21` — `NR42`: [Audio channel 4 volume](#apu-nr42)
+- `$FF22` — `NR43`: [Audio channel 4 frequency](#apu-nr43)
+- `$FF23` — `NR44`: [Audio channel 4 control](#apu-nr44)
+- `$FF24` — `NR50`: [Audio output mapping](#apu-nr50)
+- `$FF25` — `NR51`: [Audio channel mapping](#apu-nr51)
+- `$FF26` — `NR52`: [Audio channel control](#apu-nr52)
+- `$FF27` – `$FF2F`: Unmapped
 - `$FF30` – `$FF3F`: [Wave pattern](#apu-ch3)
 - `$FF40` — `LCDC`: [LCD control](#ppu-lcdc)
 - `$FF41` — `STAT`: [LCD status](#ppu-stat)
@@ -185,6 +208,7 @@ TODO
 - `$FF49` — `OBP1`: [OBJ palette 1](#ppu-obp1)
 - `$FF4A` — `WY`: [Window Y coord](#ppu-wy)
 - `$FF4B` — `WX`: [Window X coord](#ppu-wx)
+- `$FF50` — [Boot ROM control](#mmio-bootrom)
 - `$FFFF` — `IE`: [Interrupts enabled](#mmio-ie)
 
 See [CGB-specific memory mapped I/O](#mmio-cgb) for additional registers in CGB mode.
