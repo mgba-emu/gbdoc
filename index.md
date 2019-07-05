@@ -21,7 +21,7 @@ Open Game Boy Documentation Project
 		- [TAMA5](#mbc-tama5)
 		- [HuC-1](#mbc-huc1)
 		- [HuC-3](#mbc-huc3)
-		- [Bootleg/pirate mappers](#mbc-pirate)
+		- [Unlicensed mappers](#mbc-unlicensed)
 - [Picture processing unit](#ppu)
 	- [Draw mode](#ppu-mode)
 		- [Mode 0](#ppu-mode-0)
@@ -473,9 +473,11 @@ A list of known MBC types is as follows:
 	- `$FF`: IR sensor
 - [HuC-3](#mbc-huc3)
 	- `$FE`: IR sensor
-- [Bootleg/pirate mappers](#mbc-pirate)
+- [Unlicensed mappers](#mbc-unlicensed)
 	- (?): Sachen
 	- (?): Sintax
+	- (?): Vast Fame
+	- N/A: [Wisdom Tree](#mbc-wisdom-tree)
 	- TODO ...
 
 ### <a id="mbc-1">MBC1</a>
@@ -656,6 +658,22 @@ TODO
 HuC-3 is a custom MBC developed by Hudson and officially licensed by Nintendo that extends HuC-1 with an RTC and a piezoelectric buzzer. It's notably used in the Robot Poncots (Robopon outside of Japan) and Pocket Family game series.
 
 TODO
+
+### <a id="mbc-unlicensed">Unlicensed mappers</a>
+
+Several unlicensed games use unofficial mappers that are less well documented and may have copy protection.
+
+#### <a id="mbc-wisdom-tree">Wisdom Tree</a>
+
+Wisdom Tree is an American company devoted to very, very Christian games. Notable for unlicensed games including Super 3D Noah's Ark, they released games on a wide array of Nintendo platforms including the Game Boy. The Game Boy version uses a very simple mapper with the ROM region (`$0000` – `$7FFF`) remappable as a single monolithic block.
+
+##### Read from `$0000` – `$7FFF`
+
+Default mapped as bank 0. Can be swapped out with other banks.
+
+##### Write to `$0000` – `$3FFF`
+
+Swap the 32 KiB bank in the whole ROM region. Unlike most mappers the selected bank is based on the address written, not the value written.
 
 <a id="ppu">Picture processing unit</a>
 ===
