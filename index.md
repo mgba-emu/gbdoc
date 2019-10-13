@@ -535,10 +535,10 @@ TODO
 
 ### <a id="mbc-3">MBC3</a>
 
-- Maximum ROM size: 256 banks (4 MiB) (?)
+- Maximum ROM size: 128 banks (2 MiB) / 256 banks (4 MiB)
 - Maximum RAM size: 4 banks (32 kB) / 8 banks (64 kB) for MBC30
 
-MBC3 is one of the most common MBCs, along with MBC5. It's especially present in the DMG era. MBC3 improves upon MBC1 by removing the "banking mode", and can function with a RTC (Real-Time Clock, famously used in the second generation Pokémon games). The Japanese version of Pokémon Crystal contains a special MBC3 labelled MBC30, that simply can address twice the external RAM. (This is the only known difference; JP Crystal is also the only known cart to use MBC30)
+MBC3 is one of the most common MBCs, along with MBC5. It's especially present in the DMG era. MBC3 improves upon MBC1 by removing the "banking mode", and can function with a RTC (Real-Time Clock, famously used in the second generation Pokémon games). The Japanese version of Pokémon Crystal contains a special MBC3 labelled MBC30, that can address twice the external RAM and twice the external ROM. (This is the only known difference; JP Crystal is also the only known cart to use MBC30)
 
 #### Read from `$0000` – `$3FFF`
 
